@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infinite Scroll 예제</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+  }
+  #image-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 20px;
+  }
+  .image-item {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .image-item img {
+    width: 100%;
+    height: auto;
+  }
+</style>
+</head>
+<body>
+<div id="image-container">
+  <!-- 이미지가 여기에 동적으로 추가됩니다. -->
+</div>
+
+<script>
+const imageContainer = document.getElementById('image-container');
+let page = 1;
+
+// 이미지 로드 함수
+function loadImages(page) {
+  fetch(`https://picsum.photos/v2/list?page=${page}&limit=9`)
+    .then(response => response.json())
+    .then(images => {
+      images.forEach(image => {
+        const imageItem = document.createElement('div');
+        imageItem.className = 'image-item';
+        const img = document.createElement('img');
+        img.src = `${image.download_url}?w=300&h=200&fit=crop`; // 원하는 크기로 crop
+        img.alt = 'Random Image';
+        imageItem.appendChild(img);
+        imageContainer.appendChild(imageItem);
+      });
+      // 이미지 추가 후 Observer 다시 등록
+      observer.observe(document.querySelector('.image-item:last-child'));
+    })
+    .catch(error => console.error('Error fetching images:', error));
+}
+
+// Intersection Observer 생성
+const options = {
+  root: null,
+  rootMargin: '0px',
+  threshold: 0.5, // 이미지가 화면의 50% 이상 보일 때 로드
+};
+
+const observer = new IntersectionObserver((entries, observer) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      loadImages(page);
+      page++;
+    }
+  });
+}, options);
+
+// 페이지 로드 시 최초 이미지 로드를 위해 호출
+loadImages(page);
+</script>
+</body>
+</html>
